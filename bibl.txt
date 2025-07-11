@@ -1,0 +1,7 @@
+SpeechRecognition
+pywin32
+requests
+fuzzywuzzy
+python-Levenshtein
+selenium webdriver-manager
+
