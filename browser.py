@@ -7,7 +7,7 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 from voice import speak
-
+import subprocess
 driver = None
 yt_playlist = {"ids": [], "idx": -1}
 
@@ -88,11 +88,30 @@ def play_current_video():
         speak("Нет доступных треков.")
 
 
-def open_telegram():
-    speak("Открываю Telegram Web.")
-    open_url("https://web.telegram.org/")
 
+
+def open_telegram():
+    chrome_path = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
+    profile_path = r"C:\Users\stasm\AppData\Local\Google\Chrome\User Data\Default"  
+    profile_dir = "Default" 
+    url = "https://web.telegram.org/"
+
+    subprocess.Popen([
+        chrome_path,
+        f'--profile-directory={profile_dir}',
+        f'--user-data-dir={profile_path}',
+        url
+    ])
 
 def open_instagram():
-    speak("Открываю Instagram.")
-    open_url("https://www.instagram.com/")
+    chrome_path = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
+    profile_path = r"C:\Users\stasm\AppData\Local\Google\Chrome\User Data\Default"  
+    profile_dir = "Default"  
+    url = "https://www.instagram.com/"
+
+    subprocess.Popen([
+        chrome_path,
+        f'--profile-directory={profile_dir}',
+        f'--user-data-dir={profile_path}',
+        url
+    ])

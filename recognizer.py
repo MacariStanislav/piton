@@ -1,8 +1,9 @@
 import speech_recognition as sr
 from voice import speak
-from commands import clean_text, recognize_cmd, execute_cmd
+from commands import clean_text, recognize_cmd, execute_cmd, recognize_hello, execute_hello
 from browser import yt_playlist, play_current_video
-
+from config.allConfig import opts
+from browser import get_youtube_ids
 def ask_for_music_track():
     yt_playlist["ids"], yt_playlist["idx"] = [], -1
     speak("Какой трек хотите?")
@@ -17,7 +18,7 @@ def ask_for_music_track():
         track_name = r.recognize_google(audio, language="ru-RU").lower()
         print(f"Распознано название трека: {track_name}")
         speak(f"Ищу трек {track_name} на YouTube.")
-        from browser import get_youtube_ids
+
         ids = get_youtube_ids(track_name)
         if not ids:
             speak("Ничего не нашёл.")
@@ -35,10 +36,13 @@ def callback(recognizer, audio):
         voice = recognizer.recognize_google(audio, language="ru-RU").lower()
         print("[распознано]", voice)
 
-        from config.allConfig import opts
-        from commands import execute_cmd
-
-        if any(name in voice for name in opts["name"]):
+   
+        if any(hello_phrase in voice for hello_phrase in opts["hello"]):
+            cleaned = clean_text(voice)
+            hello_data = recognize_hello(cleaned)
+            execute_hello(hello_data["hell"], original_text=cleaned)
+            
+        elif any(name in voice for name in opts["name"]):
             cleaned = clean_text(voice)
             cmd_data = recognize_cmd(cleaned)
             execute_cmd(cmd_data["cmd"], original_text=cleaned)

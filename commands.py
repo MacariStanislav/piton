@@ -1,9 +1,11 @@
 import datetime
 from fuzzywuzzy import fuzz
 from voice import speak
-from browser import yt_playlist, play_current_video, open_url
+from browser import yt_playlist, play_current_video, open_url, open_telegram, open_instagram
 from config.allConfig import opts
 
+import webbrowser     
+import subprocess
 gpt_enabled = False
 
 def clean_text(text):
@@ -12,6 +14,35 @@ def clean_text(text):
     for t in opts["tbr"]:
         text = text.replace(t, "")
     return ' '.join(text.strip().split())
+
+def open_google_with_profile():
+    chrome_path = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
+    profile_path = r"C:\Users\stasm\AppData\Local\Google\Chrome\User Data"
+    profile_dir = "Default"  
+
+    url = "https://www.google.com/"
+
+    subprocess.Popen([
+        chrome_path,
+        f'--profile-directory={profile_dir}',
+        f'--user-data-dir={profile_path}',
+        url
+    ])
+def recognize_hello(cmd):
+    RC = {"hell": "", "percent": 0}
+    threshold = 55 
+    for phrase in opts["hello"]:
+        ratios = [
+            fuzz.ratio(cmd, phrase),
+            fuzz.partial_ratio(cmd, phrase),
+            fuzz.token_sort_ratio(cmd, phrase)
+        ]
+        max_ratio = max(ratios)
+        if max_ratio > RC["percent"]:
+            RC["hell"] = phrase
+            RC["percent"] = max_ratio
+    return RC if RC["percent"] >= threshold else {"hell": "", "percent": 0}
+
 
 def recognize_cmd(cmd):
     RC = {"cmd": "", "percent": 0}
@@ -29,13 +60,25 @@ def recognize_cmd(cmd):
                 RC["cmd"] = c
                 RC["percent"] = max_ratio
     return RC if RC["percent"] >= threshold else {"cmd": "", "percent": 0}
+def speak_and_log(text):
+        print(f"[ответ]: {text}")
+        speak(text)
+
+def execute_hello(cmd, original_text=None):  
+    now = datetime.datetime.now()
+    if now.hour >= 6 and now.hour < 12:
+       speak_and_log("Доброе утро!")
+    elif now.hour >= 12 and now.hour < 18:
+        speak_and_log("Добрый день!")
+    elif now.hour >= 18 and now.hour < 23:
+       speak_and_log("Добрый вечер!")
+    else:
+       speak_and_log("Доброй ночи!")
+
+ 
 
 def execute_cmd(cmd, original_text=None):
     global gpt_enabled
-
-    def speak_and_log(text):
-        print(f"[ответ]: {text}")
-        speak(text)
 
     if cmd == "ctime":
         now = datetime.datetime.now()
@@ -46,11 +89,12 @@ def execute_cmd(cmd, original_text=None):
         speak_and_log("Хорошо, скажите название трека.")
         ask_for_music_track()
     elif cmd == "telegram":
-        from browser import open_telegram
+
         open_telegram()
     elif cmd == "instagram":
-        from browser import open_instagram
+       
         open_instagram()
+        
     elif cmd == "next":
         if yt_playlist["ids"]:
             if yt_playlist["idx"] + 1 < len(yt_playlist["ids"]):
@@ -71,20 +115,20 @@ def execute_cmd(cmd, original_text=None):
     
     elif cmd == "google":
         if original_text:
-          
+            
             query = original_text.lower()
-          
             for keyword in opts["cmds"].get("google", []):
                 query = query.replace(keyword, "")
             query = query.strip()
             if query:
                 speak_and_log(f"Ищу в Google: {query}")
-                open_url(f"https://www.google.com/search?q={query}")
+                webbrowser.open(f"https://www.google.com/search?q={query}")
             else:
-                speak_and_log("Что именно искать в Google?")
+                speak_and_log("Я ещё глупый так что делай запрос по типу , бот гоогле погода")
+                
         else:
             speak_and_log("Открываю главную страницу Google.")
-            open_url("https://www.google.com")
+            open_google_with_profile()
     
     elif cmd == "news":
         speak_and_log("Показываю последние новости.")

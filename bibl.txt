@@ -3,5 +3,6 @@ pywin32
 requests
 fuzzywuzzy
 python-Levenshtein
-selenium webdriver-manager
-
+selenium
+webdriver-manager
+    
