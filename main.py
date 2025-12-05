@@ -1,30 +1,32 @@
 import threading
 import time
-import speech_recognition as sr
-from voice import speak_worker, speak, speak_queue 
-from recognizer import callback
-from browser import driver
+from app.voice import start_speak_worker, speak, stop_speak_worker
+from app.recognizer import start_recognizer_background, start_console_worker
+from app.browser import driver
 
-if __name__ == "__main__":
-    r = sr.Recognizer()
-    mic = sr.Microphone()
+def main():
+    start_speak_worker()
+    stop_listening = start_recognizer_background()
+    start_console_worker()
 
-    with mic as source:
-        r.adjust_for_ambient_noise(source)
-
-    threading.Thread(target=speak_worker, daemon=True).start()
-
-    stop_listening = r.listen_in_background(mic, callback)
-
-    speak("Добрый день, сэр")
-    speak("Говорите, я вас слушаю")
+    speak("Бот включён")
 
     try:
         while True:
             time.sleep(0.1)
     except KeyboardInterrupt:
         print("Завершение работы...")
-        stop_listening()           
-        speak_queue.put(None)    
-        if driver:
-            driver.quit()
+        if stop_listening:
+            try:
+                stop_listening(wait_for_stop=False)
+            except:
+                pass
+        stop_speak_worker()
+        try:
+            if driver:
+                driver.quit()
+        except:
+            pass
+
+if __name__ == "__main__":
+    main()

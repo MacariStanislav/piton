@@ -8,5 +8,5 @@ opts = {
     "cmds": commands,
     "hello": hello,
     "tbr": tbr,
-    
+    "activation": name
 }
