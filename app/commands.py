@@ -195,7 +195,6 @@ class CommandHandler:
 
     def activate_listening(self, original_text=None, *_):
         self.active_listening = True
-        self.speak_and_log("Режим прослушивания активирован.")
 
     def deactivate_listening(self, original_text=None, *_):
         self.active_listening = False
