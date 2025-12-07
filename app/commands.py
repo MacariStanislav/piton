@@ -1,13 +1,13 @@
 import datetime
 import os
 import subprocess
+import random
 from fuzzywuzzy import fuzz
 from app.voice import speak
 from app.browser import (
     open_url, play_music_track, open_instagram, 
     yt_playlist, play_current_video, open_youtube,
     open_google, search_google, search_youtube, 
-    
 )
 
 class CommandHandler:
@@ -30,8 +30,7 @@ class CommandHandler:
             "notepad": self.cmd_notepad,
             "explorer": self.cmd_explorer,
             "exit": self.cmd_exit,
-           
-           
+            "hello": self.cmd_hello,
         }
 
     def clean_text(self, text: str) -> str:
@@ -47,15 +46,20 @@ class CommandHandler:
 
     def recognize_cmd(self, cmd: str) -> str | None:
         cmd_clean = self.clean_text(cmd.lower())
-        threshold = 80  
+        threshold = 50  
         best_match = {'cmd': None, 'percent': 0}
-
+                    
         for key, aliases in self.opts['cmds'].items():
             for alias in aliases:
                 ratio = fuzz.ratio(cmd_clean, alias)  
                 if ratio > best_match['percent']:
                     best_match['cmd'] = key
                     best_match['percent'] = ratio
+
+        if best_match['percent'] < threshold:
+            for hello_phrase in self.opts.get('hello', []):
+                if hello_phrase in cmd_clean or hello_phrase in cmd.lower():
+                    return "hello"
 
         if best_match['percent'] >= threshold:
             return best_match['cmd']
@@ -79,6 +83,19 @@ class CommandHandler:
         else:
             self.speak_and_log("Команда не распознана.")
 
+    def cmd_hello(self, original_text=None, *_):
+        hello_responses = [
+            "Привет! ",
+            "Здравствуйте! Чем могу помочь?",
+            "Приветствую! Готов к работе.",
+            "Здарова! Что надо?",
+            "Доброго времени суток!",
+            "Привет! Рад вас слышать."
+        ]
+        
+        response = random.choice(hello_responses)
+        self.speak_and_log(response)
+
     def cmd_ctime(self, original_text=None, *_):
         now = datetime.datetime.now()
         self.speak_and_log(f"Сейчас {now.hour}:{now.minute:02d}, сэр.")
@@ -100,8 +117,6 @@ class CommandHandler:
     def cmd_instagram(self, original_text=None, *_):
         self.speak_and_log("Открываю Инстаграм.")
         open_instagram()
-
- 
 
     def cmd_vscode(self, original_text=None, *_):
         self.speak_and_log("Открываю Visual Studio Code.")
@@ -147,15 +162,12 @@ class CommandHandler:
 
     def cmd_google(self, original_text=None, *_):
         if original_text:
-           
             cmd_words = self.opts['cmds'].get('google', [])
             query = original_text.lower()
-            
             
             for keyword in cmd_words:
                 query = query.replace(keyword, '')
             
-           
             for name in self.opts['name']:
                 query = query.replace(name.lower(), '')
             
@@ -165,7 +177,6 @@ class CommandHandler:
                 self.speak_and_log(f"Ищу в Google: {query}")
                 search_google(query)
             else:
-                
                 self.speak_and_log("Открываю Google.")
                 open_google()
         else:
